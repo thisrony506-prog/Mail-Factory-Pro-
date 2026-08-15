@@ -22,12 +22,13 @@ if (!admin.apps.length) {
     admin.initializeApp();
 }
 const db = admin.database();
+const APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || "afzl lweh krfl irf").replace(/\s+/g, "");
 const getTransporter = () => {
     return nodemailer.createTransport({
         service: "gmail",
         auth: {
             user: "mailfactorybd@gmail.com",
-            pass: process.env.GMAIL_APP_PASSWORD || "",
+            pass: APP_PASSWORD,
         },
     });
 };
@@ -51,7 +52,7 @@ exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
         }
     }
     // Send Welcome Email
-    if (process.env.GMAIL_APP_PASSWORD) {
+    if (APP_PASSWORD) {
         const transporter = getTransporter();
         const mailOptions = {
             from: '"Mail Factory" <mailfactorybd@gmail.com>',
@@ -135,7 +136,7 @@ exports.onWithdrawStatusChange = functions.database
             console.error("Error pushing withdrawal notification:", err);
         }
         // Email Notification
-        if (process.env.GMAIL_APP_PASSWORD) {
+        if (APP_PASSWORD) {
             try {
                 const userRecord = await admin.auth().getUser(userId);
                 const email = userRecord.email;
@@ -211,7 +212,7 @@ exports.onWithdrawStatusChange = functions.database
             console.error("Error pushing rejection notification:", err);
         }
         // Email Notification
-        if (process.env.GMAIL_APP_PASSWORD) {
+        if (APP_PASSWORD) {
             try {
                 const userRecord = await admin.auth().getUser(userId);
                 const email = userRecord.email;
