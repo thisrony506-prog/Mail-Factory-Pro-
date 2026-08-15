@@ -39,6 +39,105 @@ export const DEFAULT_LEVELS: LevelConfig[] = [
   { level: 5, approved: 500, rate: 14, old_rate: 12, title: 'Diamond Boss', perkDescription: 'Maximum rate + VIP 24/7 dedicated review' },
 ];
 
+export const DEFAULT_TOP_SELLERS: UserProfile[] = [
+  {
+    uid: 'seller_1',
+    username: 'Tanvir Hossain',
+    email: 'tanvir***@gmail.com',
+    balance: 4850,
+    hold: 0,
+    referralCode: 'TANVIR88',
+    referralEarnings: 450,
+    totalEarnings: 12500,
+    total_submitted: 350,
+    total_withdrawn: 8000,
+    login_streak: 15,
+    createdAt: Date.now() - 86400000 * 20,
+    last_login: Date.now(),
+    manual_approved_count: 320,
+  },
+  {
+    uid: 'seller_2',
+    username: 'Shakil Ahmed',
+    email: 'shakil***@gmail.com',
+    balance: 3420,
+    hold: 0,
+    referralCode: 'SHAKIL77',
+    referralEarnings: 310,
+    totalEarnings: 8900,
+    total_submitted: 260,
+    total_withdrawn: 5500,
+    login_streak: 12,
+    createdAt: Date.now() - 86400000 * 15,
+    last_login: Date.now(),
+    manual_approved_count: 240,
+  },
+  {
+    uid: 'seller_3',
+    username: 'Mehedi Hasan',
+    email: 'mehedi***@gmail.com',
+    balance: 2890,
+    hold: 0,
+    referralCode: 'MEHEDI55',
+    referralEarnings: 220,
+    totalEarnings: 6400,
+    total_submitted: 190,
+    total_withdrawn: 4200,
+    login_streak: 10,
+    createdAt: Date.now() - 86400000 * 12,
+    last_login: Date.now(),
+    manual_approved_count: 180,
+  },
+  {
+    uid: 'seller_4',
+    username: 'Rakibul Islam',
+    email: 'rakib***@gmail.com',
+    balance: 2150,
+    hold: 0,
+    referralCode: 'RAKIB12',
+    referralEarnings: 180,
+    totalEarnings: 5100,
+    total_submitted: 150,
+    total_withdrawn: 3000,
+    login_streak: 8,
+    createdAt: Date.now() - 86400000 * 10,
+    last_login: Date.now(),
+    manual_approved_count: 140,
+  },
+  {
+    uid: 'seller_5',
+    username: 'Fahim Faisal',
+    email: 'fahim***@gmail.com',
+    balance: 1780,
+    hold: 0,
+    referralCode: 'FAHIM99',
+    referralEarnings: 120,
+    totalEarnings: 4200,
+    total_submitted: 120,
+    total_withdrawn: 2500,
+    login_streak: 6,
+    createdAt: Date.now() - 86400000 * 8,
+    last_login: Date.now(),
+    manual_approved_count: 110,
+  },
+  {
+    uid: 'seller_6',
+    username: 'Nazmul Huda',
+    email: 'nazmul***@gmail.com',
+    balance: 1450,
+    hold: 0,
+    referralCode: 'NAZMUL33',
+    referralEarnings: 90,
+    totalEarnings: 3400,
+    total_submitted: 100,
+    total_withdrawn: 2000,
+    login_streak: 5,
+    createdAt: Date.now() - 86400000 * 5,
+    last_login: Date.now(),
+    manual_approved_count: 90,
+  },
+];
+
 export const DEFAULT_SHIFTS: Record<string, ShiftInfo> = {
   shift1: { title: 'শুভ রাত্রি প্রথম সময়', time: '12:00 AM', active: true, order: 1, icon: 'moon' },
   shift2: { title: 'শুভ দিনের প্রথম সময়', time: '07:00 AM', active: true, order: 2, icon: 'sun' },
@@ -134,7 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [signupBonusReferrer, setSignupBonusReferrer] = useState<number>(5);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [withdrawRequests, setWithdrawRequests] = useState<WithdrawRequest[]>([]);
-  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>(DEFAULT_TOP_SELLERS);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -309,6 +408,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  // Sync Top Sellers Leaderboard (Public)
+  useEffect(() => {
+    try {
+      const topSellersRef = ref(db, 'top_sellers');
+      const unsubscribe = onValue(topSellersRef, (snap) => {
+        if (snap.exists()) {
+          const val = snap.val();
+          const list: UserProfile[] = Array.isArray(val)
+            ? val
+            : Object.keys(val).map((k) => ({ ...val[k], uid: k }));
+          if (list.length > 0) {
+            setAllUsers(list);
+          }
+        }
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn('top_sellers listener error:', e);
+    }
+  }, []);
+
   // Sync All Users (for Leaderboard & Referral Friend list - Admins only)
   useEffect(() => {
     if (!user || (user.email !== 'gmrony135@gmail.com' && user.email !== 'mailfactorybd@gmail.com')) {
@@ -324,7 +444,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             u.uid = child.key;
             list.push(u);
           });
-          setAllUsers(list);
+          if (list.length > 0) {
+            setAllUsers(list);
+          }
         }
       });
       return () => unsubscribe();

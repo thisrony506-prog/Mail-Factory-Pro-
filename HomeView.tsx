@@ -15,7 +15,9 @@ import {
   Headphones,
   Lock,
   Sparkles,
-  Layers
+  Layers,
+  Trophy,
+  ChevronRight
 } from 'lucide-react';
 import { GmailType } from './types';
 
@@ -29,6 +31,7 @@ export const HomeView: React.FC = () => {
     appLogo,
     user,
     profile,
+    allUsers,
     setAuthModalOpen,
   } = useApp();
 
@@ -263,6 +266,65 @@ export const HomeView: React.FC = () => {
 
       {/* Customer Reviews Preview */}
       <HomeReviewsPreview />
+
+      {/* Top Sellers Leaderboard Spotlight */}
+      <div className="rounded-3xl bg-white border border-slate-200 p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-black">
+              <Trophy className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold text-slate-800">
+                {language === 'bn' ? 'টপ সেলার লিডারবোর্ড 🏆' : 'Top Sellers Leaderboard 🏆'}
+              </h3>
+              <span className="text-[11px] font-medium text-slate-400">
+                {language === 'bn' ? 'সর্বোচ্চ আয়কারী এক্সচেঞ্জ পার্টনারগণ' : 'Highest verified earning partners'}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setActiveTab('sellers');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-0.5 bg-indigo-50 px-2.5 py-1 rounded-xl"
+          >
+            <span>{language === 'bn' ? 'সব দেখুন' : 'View All'}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          {allUsers.slice(0, 3).map((seller, idx) => {
+            const medals = ['👑 1st', '🥈 2nd', '🥉 3rd'];
+            const bgStyles = [
+              'bg-gradient-to-b from-amber-50 to-amber-100/80 border-amber-300 text-amber-950',
+              'bg-gradient-to-b from-slate-50 to-slate-100 border-slate-300 text-slate-900',
+              'bg-gradient-to-b from-orange-50 to-orange-100/70 border-orange-200 text-orange-950',
+            ];
+            return (
+              <div
+                key={seller.uid || idx}
+                className={`p-2.5 rounded-2xl border text-center relative flex flex-col items-center justify-between ${bgStyles[idx] || 'bg-slate-50 border-slate-200'}`}
+              >
+                <span className="text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-full bg-white/80 shadow-xs">
+                  {medals[idx]}
+                </span>
+                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-black text-xs flex items-center justify-center my-0.5 shadow-sm">
+                  {(seller.username || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div className="text-[11px] font-extrabold truncate w-full mt-1">
+                  {seller.username}
+                </div>
+                <div className="text-xs font-black text-indigo-700 font-mono mt-0.5">
+                  ৳{(Number(seller.balance) || 0).toFixed(0)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Why Choose Us */}
       <div className="rounded-3xl bg-white border border-slate-200 p-5 shadow-sm text-center">

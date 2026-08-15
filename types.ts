@@ -63,6 +63,7 @@ export interface UserProfile {
   forceLogout?: boolean;
   total_submitted: number;
   total_withdrawn: number;
+  totalEarnings?: number;
   auth_provider?: string;
   manual_approved_count?: number;
   is_blocked?: boolean;
