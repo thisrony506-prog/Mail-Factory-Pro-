@@ -22,6 +22,7 @@ import {
   ChevronDown,
   ShieldCheck,
   Key,
+  Star,
 } from 'lucide-react';
 import { FAQItem } from './types';
 
@@ -494,6 +495,108 @@ export const InfoModal: React.FC<{
         </div>
         <div className="p-5 overflow-y-auto text-xs text-slate-600 leading-relaxed space-y-2.5">
           {content}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const RateAppModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+}> = ({ isOpen, onClose }) => {
+  const { language } = useApp();
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    if (rating === 0) return;
+    setSubmitted(true);
+    localStorage.setItem('mf_has_rated', '1');
+    setTimeout(() => {
+      onClose();
+      setSubmitted(false);
+      setRating(0);
+    }, 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+      <div 
+        className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-200"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+            <Star className="w-8 h-8 fill-amber-500" />
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-black text-slate-800">
+              {language === 'bn' ? 'আমাদের অ্যাপটি কেমন লাগছে?' : 'Enjoying Mail Factory?'}
+            </h3>
+            <p className="text-xs font-medium text-slate-500 mt-1">
+              {language === 'bn' 
+                ? 'আপনার মূল্যবান রেটিং আমাদের সেবাকে আরও উন্নত করতে সাহায্য করবে।' 
+                : 'Your valuable rating helps us improve our service.'}
+            </p>
+          </div>
+
+          {!submitted ? (
+            <>
+              <div className="flex items-center justify-center gap-2 py-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="p-1 transition-transform hover:scale-110 active:scale-90"
+                  >
+                    <Star 
+                      className={`w-8 h-8 transition-colors ${
+                        star <= (hoverRating || rating) 
+                          ? 'fill-amber-400 text-amber-400' 
+                          : 'fill-slate-100 text-slate-200'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={rating === 0}
+                className={`w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all ${
+                  rating > 0 
+                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-md active:scale-95' 
+                    : 'bg-slate-300 cursor-not-allowed'
+                }`}
+              >
+                {language === 'bn' ? 'সাবমিট করুন' : 'Submit Rating'}
+              </button>
+            </>
+          ) : (
+            <div className="py-6 flex flex-col items-center justify-center space-y-3 animate-in fade-in zoom-in">
+              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <p className="font-bold text-slate-800">
+                {language === 'bn' ? 'ধন্যবাদ!' : 'Thank you!'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

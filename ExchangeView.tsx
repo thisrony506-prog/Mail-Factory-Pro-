@@ -34,6 +34,7 @@ export const ExchangeView: React.FC = () => {
     maintenanceMode,
     user,
     setAuthModalOpen,
+    setRateModalOpen,
   } = useApp();
 
   const t = translations[language];
@@ -175,6 +176,17 @@ export const ExchangeView: React.FC = () => {
       } catch {
         // safe ignore
       }
+      
+      const subCount = Number(localStorage.getItem('mf_exchange_count') || 0) + 1;
+      localStorage.setItem('mf_exchange_count', subCount.toString());
+      const hasRated = localStorage.getItem('mf_has_rated') === '1';
+
+      if (subCount === 3 && !hasRated) {
+        setTimeout(() => {
+          setRateModalOpen(true);
+        }, 1500);
+      }
+
       setSuccessData({
         count: cleanedGmails.length,
         totalAmount: cleanedGmails.length * activeRate,

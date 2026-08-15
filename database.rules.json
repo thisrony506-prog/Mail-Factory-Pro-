@@ -1,0 +1,68 @@
+{
+  "rules": {
+    "settings": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+    },
+    "shifts": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+    },
+    "top_sellers": {
+      ".read": true,
+      ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+    },
+    "used_emails": {
+      ".indexOn": ["email"],
+      ".read": "auth != null",
+      "$emailKey": {
+        ".write": "auth != null && (!data.exists() || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+        ".validate": "newData.hasChildren(['email', 'submittedAt'])"
+      }
+    },
+    "users": {
+      ".indexOn": ["referralCode", "balance"],
+      ".read": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+        ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || (auth.uid === $uid && (!data.exists() ? (newData.child('isAdmin').val() !== true && newData.child('isBanned').val() !== true && (!newData.child('balance').exists() || newData.child('balance').val() <= 10)) : (!newData.child('balance').exists() || newData.child('balance').val() === data.child('balance').val()) && (!newData.child('totalEarnings').exists() || newData.child('totalEarnings').val() === data.child('totalEarnings').val()) && (!newData.child('referralEarnings').exists() || newData.child('referralEarnings').val() === data.child('referralEarnings').val()) && (!newData.child('referralCount').exists() || newData.child('referralCount').val() === data.child('referralCount').val()) && (!newData.child('currentLevel').exists() || newData.child('currentLevel').val() === data.child('currentLevel').val()) && (!newData.child('isAdmin').exists() || newData.child('isAdmin').val() === data.child('isAdmin').val()) && (!newData.child('isBanned').exists() || newData.child('isBanned').val() === data.child('isBanned').val()) && (!newData.child('hold').exists() || newData.child('hold').val() === data.child('hold').val()) && (!newData.child('total_withdrawn').exists() || newData.child('total_withdrawn').val() === data.child('total_withdrawn').val()) && (!newData.child('manual_approved_count').exists() || newData.child('manual_approved_count').val() === data.child('manual_approved_count').val()) && (!newData.child('createdAt').exists() || newData.child('createdAt').val() === data.child('createdAt').val()) && (!newData.child('referralCode').exists() || newData.child('referralCode').val() === data.child('referralCode').val()) && (!newData.child('referredBy').exists() || newData.child('referredBy').val() === data.child('referredBy').val()))))",
+        "notifications": {
+          ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+        }
+      }
+    },
+    "submissions": {
+      ".indexOn": ["userId", "status", "submittedAt"],
+      ".read": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+      "$subId": {
+        ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || (!data.exists() && newData.child('userId').val() === auth.uid && newData.child('status').val() === 'pending'))"
+      }
+    },
+    "user_submissions": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+      }
+    },
+    "withdraw_requests": {
+      ".indexOn": ["userId", "status", "requestedAt"],
+      ".read": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+      "$wdId": {
+        ".write": "auth != null && (auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com' || (!data.exists() && newData.child('userId').val() === auth.uid && newData.child('status').val() === 'pending'))"
+      }
+    },
+    "user_withdrawals": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+      }
+    },
+    "support_chats": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')",
+        ".write": "auth != null && (auth.uid === $uid || auth.token.admin === true || auth.token.email === 'gmrony135@gmail.com' || auth.token.email === 'mailfactorybd@gmail.com')"
+      }
+    }
+  }
+}

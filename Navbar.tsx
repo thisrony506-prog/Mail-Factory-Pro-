@@ -73,7 +73,7 @@ export const Navbar: React.FC = () => {
           {/* Quick Balance Pill */}
           {user && profile ? (
             <button
-              onClick={() => setWithdrawModalOpen(true)}
+              onClick={() => setActiveTab('withdraw')}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold text-white transition-all shadow-inner"
               title="Click to withdraw"
             >

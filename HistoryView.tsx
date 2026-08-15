@@ -17,7 +17,7 @@ import {
 import { Submission, WithdrawRequest } from './types';
 
 export const HistoryView: React.FC = () => {
-  const { language, submissions, withdrawRequests, allUsers, setWithdrawModalOpen } = useApp();
+  const { language, submissions, withdrawRequests, allUsers, setWithdrawModalOpen, setActiveTab } = useApp();
   const t = translations[language];
 
   const [activeSubTab, setActiveSubTab] = useState<'sub' | 'wd' | 'trend'>('sub');
@@ -222,7 +222,7 @@ export const HistoryView: React.FC = () => {
               </span>
             </div>
             <button
-              onClick={() => setWithdrawModalOpen(true)}
+              onClick={() => setActiveTab('withdraw')}
               className="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow hover:bg-indigo-700 active:scale-95"
             >
               {t.withdraw}
@@ -260,9 +260,15 @@ export const HistoryView: React.FC = () => {
                           via {wd.paymentMethod || wd.method}
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-slate-400 block">
+                      <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
                         Acc: {wd.paymentNumber} • {wdDate}
                       </span>
+                      {wd.feeAmount ? (
+                        <div className="text-[10px] font-bold mt-1 text-slate-500 flex gap-2">
+                          <span className="text-rose-500">Fee: ৳{wd.feeAmount.toFixed(2)}</span>
+                          <span className="text-emerald-600">Net: ৳{(wd.netAmount || wd.amount).toFixed(2)}</span>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 

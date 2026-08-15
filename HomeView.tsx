@@ -3,6 +3,9 @@ import { useApp } from './AppContext';
 import { translations } from './i18n';
 import { ReviewShifts } from './ReviewShifts';
 import { PWAInstallBanner } from './PWAInstallBanner';
+import { SEO } from './SEO';
+import { HomeReviewsPreview } from './HomeReviewsPreview';
+
 import {
   ShieldCheck,
   Zap,
@@ -12,7 +15,7 @@ import {
   Headphones,
   Lock,
   Sparkles,
-  Layers,
+  Layers
 } from 'lucide-react';
 import { GmailType } from './types';
 
@@ -25,11 +28,16 @@ export const HomeView: React.FC = () => {
     maintenanceMode,
     appLogo,
     user,
+    profile,
     setAuthModalOpen,
   } = useApp();
 
   const t = translations[language];
   const [selectedType, setSelectedType] = useState<GmailType>('new');
+
+  const availableBalance = profile?.balance || 0;
+  const netBalance = availableBalance * 0.94; // 6% fee model
+  const netUsd = netBalance / 120; // 1 USD = 120 BDT
 
   const handleStartExchange = () => {
     if (!user) {
@@ -41,6 +49,22 @@ export const HomeView: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4 pb-24 space-y-4">
+      <SEO 
+        title="Mail Factory - Best Gmail Exchange Platform"
+        description="Exchange fresh and aged Gmail accounts for cash instantly. Bangladesh's most trusted platform with fast payment and multi-tier rewards."
+        url="https://www.mailfectory.top"
+        schemaData={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "Mail Factory",
+          "url": "https://www.mailfectory.top",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.mailfectory.top/?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }}
+      />
       {/* PWA Install Banner */}
       <PWAInstallBanner />
 
@@ -150,6 +174,43 @@ export const HomeView: React.FC = () => {
         </button>
       </div>
 
+      {/* Earnings Conversion Widget */}
+      <div className="rounded-3xl bg-indigo-50/50 border border-indigo-100 p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="text-sm font-extrabold text-slate-800">
+              {language === 'bn' ? 'ব্যালেন্স কনভার্টার' : 'Earnings Converter'}
+            </h3>
+            <span className="text-[11px] font-medium text-slate-500">
+              {language === 'bn' ? '৬% ফি বাদ দিয়ে সম্ভাব্য আয় (১ USD = ১২০ BDT)' : 'Est. after 6% fee (1 USD = 120 BDT)'}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {/* BDT Gross */}
+          <div className="bg-white rounded-2xl p-3 border border-slate-200 text-center flex flex-col justify-center">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase mb-0.5">BDT (Gross)</span>
+            <span className="text-sm font-black text-slate-800 font-mono">৳{availableBalance.toFixed(2)}</span>
+          </div>
+          
+          {/* Net BDT */}
+          <div className="bg-white rounded-2xl p-3 border border-emerald-200 text-center flex flex-col justify-center">
+             <span className="text-[10px] font-extrabold text-emerald-500 uppercase mb-0.5">BDT (Net)</span>
+             <span className="text-sm font-black text-emerald-700 font-mono">৳{netBalance.toFixed(2)}</span>
+          </div>
+
+          {/* USDT */}
+          <div className="bg-white rounded-2xl p-3 border border-amber-200 text-center flex flex-col justify-center">
+             <span className="text-[10px] font-extrabold text-amber-500 uppercase mb-0.5">USD/USDT</span>
+             <span className="text-sm font-black text-amber-600 font-mono">${netUsd.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Live Review Shifts */}
       <div>
         <div className="flex items-center justify-between mb-1">
@@ -199,6 +260,9 @@ export const HomeView: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Customer Reviews Preview */}
+      <HomeReviewsPreview />
 
       {/* Why Choose Us */}
       <div className="rounded-3xl bg-white border border-slate-200 p-5 shadow-sm text-center">

@@ -7,7 +7,11 @@ import { ExchangeView } from './ExchangeView';
 import { HistoryView } from './HistoryView';
 import { SellersView } from './SellersView';
 import { ProfileView } from './ProfileView';
-import { WithdrawModal } from './WithdrawModal';
+import { WithdrawView } from './WithdrawView';
+import { PrivacyView } from './PrivacyView';
+import { AboutView } from './AboutView';
+import { ReviewsView } from './ReviewsView';
+import { AdminReviewsView } from './AdminReviewsView';
 import { LiveChatDrawer } from './LiveChatDrawer';
 import { NotificationDrawer } from './NotificationDrawer';
 import { AuthModal } from './AuthModal';
@@ -16,7 +20,7 @@ import {
   ChangePasswordModal,
   FAQModal,
   ContactModal,
-  InfoModal,
+  RateAppModal,
 } from './Modals';
 import { IOSInstallGuideModal } from './IOSInstallGuideModal';
 import { usePWAInstall } from './usePWAInstall';
@@ -28,16 +32,15 @@ const MainLayout: React.FC = () => {
     unreadNotifsCount,
     setChatDrawerOpen,
     setNotifDrawerOpen,
+    isRateModalOpen,
+    setRateModalOpen,
   } = useApp();
-
   const { showIOSGuide, closeIOSGuide } = usePWAInstall();
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState<boolean>(false);
   const [isChangePassOpen, setIsChangePassOpen] = useState<boolean>(false);
   const [isFAQOpen, setIsFAQOpen] = useState<boolean>(false);
   const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState<boolean>(false);
-  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
@@ -50,16 +53,19 @@ const MainLayout: React.FC = () => {
         {activeTab === 'exchange' && <ExchangeView />}
         {activeTab === 'history' && <HistoryView />}
         {activeTab === 'sellers' && <SellersView />}
+        {activeTab === 'privacy' && <PrivacyView />}
+        {activeTab === 'about' && <AboutView />}
         {activeTab === 'profile' && (
           <ProfileView
             onOpenEditProfile={() => setIsEditProfileOpen(true)}
             onOpenChangePass={() => setIsChangePassOpen(true)}
             onOpenFAQ={() => setIsFAQOpen(true)}
             onOpenContact={() => setIsContactOpen(true)}
-            onOpenPrivacy={() => setIsPrivacyOpen(true)}
-            onOpenAbout={() => setIsAboutOpen(true)}
           />
         )}
+        {activeTab === 'withdraw' && <WithdrawView />}
+        {activeTab === 'reviews' && <ReviewsView />}
+        {activeTab === 'admin_reviews' && <AdminReviewsView />}
       </main>
 
       {/* Floating Action Buttons */}
@@ -71,7 +77,6 @@ const MainLayout: React.FC = () => {
         >
           <MessageSquare className="w-5 h-5" />
         </button>
-
         <button
           onClick={() => setNotifDrawerOpen(true)}
           className="w-12 h-12 rounded-2xl bg-white text-slate-700 border-2 border-slate-200 shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform relative"
@@ -86,7 +91,6 @@ const MainLayout: React.FC = () => {
 
       {/* Global Modals and Drawers */}
       <AuthModal />
-      <WithdrawModal />
       <LiveChatDrawer />
       <NotificationDrawer />
       <IOSInstallGuideModal isOpen={showIOSGuide} onClose={closeIOSGuide} />
@@ -101,45 +105,7 @@ const MainLayout: React.FC = () => {
       />
       <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-
-      <InfoModal
-        isOpen={isPrivacyOpen}
-        onClose={() => setIsPrivacyOpen(false)}
-        title="Privacy Policy & Security"
-        content={
-          <>
-            <p>
-              At <strong>Mail Factory</strong>, data confidentiality and account integrity are our highest priorities.
-            </p>
-            <p>
-              • All account credentials submitted through our exchange system are encrypted and securely verified.
-            </p>
-            <p>
-              • We strictly follow zero-data-leak policies. User personal information and payment wallets are never disclosed to third parties.
-            </p>
-            <p>
-              • Users retain full control over their account history and can delete their profile data at any time.
-            </p>
-          </>
-        }
-      />
-
-      <InfoModal
-        isOpen={isAboutOpen}
-        onClose={() => setIsAboutOpen(false)}
-        title="About Mail Factory"
-        content={
-          <div className="text-center space-y-2">
-            <div className="font-black text-sm text-indigo-700">Mail Factory v3.2.0</div>
-            <p className="text-xs text-slate-500">
-              The premier trusted Gmail exchange and monetization network in Bangladesh. Designed for high throughput, automated batch verification, multi-tiered level rewards, and instant mobile payouts.
-            </p>
-            <div className="pt-2 text-[10px] text-slate-400 font-mono">
-              © {new Date().getFullYear()} Mail Factory Team. All rights reserved.
-            </div>
-          </div>
-        }
-      />
+      <RateAppModal isOpen={isRateModalOpen} onClose={() => setRateModalOpen(false)} />
 
       {/* Bottom Nav */}
       <BottomNav />

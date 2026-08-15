@@ -45,10 +45,10 @@ export const DEFAULT_SHIFTS: Record<string, ShiftInfo> = {
 };
 
 export const DEFAULT_PAYMENT_METHODS: Record<string, PaymentMethodConfig> = {
-  bkash: { name: 'bKash', icon: 'bi-wallet2', color: '#E2136E', active: true, minWithdraw: 100, feePercent: 0 },
-  nagad: { name: 'Nagad', icon: 'bi-wallet2', color: '#F6921D', active: true, minWithdraw: 100, feePercent: 0 },
-  rocket: { name: 'Rocket', icon: 'bi-send-check', color: '#8C3494', active: true, minWithdraw: 100, feePercent: 0 },
-  binance: { name: 'USDT (Binance Pay)', icon: 'bi-currency-exchange', color: '#F0B90B', active: true, minWithdraw: 200, feePercent: 0 },
+  bkash: { name: 'bKash', icon: 'bi-wallet2', color: '#E2136E', active: true, minWithdraw: 100, feePercent: 6 },
+  nagad: { name: 'Nagad', icon: 'bi-wallet2', color: '#F6921D', active: true, minWithdraw: 100, feePercent: 6 },
+  rocket: { name: 'Rocket', icon: 'bi-send-check', color: '#8C3494', active: true, minWithdraw: 100, feePercent: 6 },
+  binance: { name: 'USDT (BEP20)', icon: 'bi-currency-exchange', color: '#F0B90B', active: true, minWithdraw: 200, feePercent: 6 },
 };
 
 interface AppContextType {
@@ -57,6 +57,10 @@ interface AppContextType {
   loading: boolean;
   language: Language;
   setLanguage: (lang: Language) => void;
+  emailNotifWithdrawal: boolean;
+  setEmailNotifWithdrawal: (val: boolean) => void;
+  emailNotifExchange: boolean;
+  setEmailNotifExchange: (val: boolean) => void;
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
   levels: LevelConfig[];
@@ -102,6 +106,8 @@ interface AppContextType {
   setChatDrawerOpen: (open: boolean) => void;
   isNotifDrawerOpen: boolean;
   setNotifDrawerOpen: (open: boolean) => void;
+  isRateModalOpen: boolean;
+  setRateModalOpen: (open: boolean) => void;
   claimDailyStreak: () => Promise<{ success: boolean; streakCount: number }>;
   appLogo: string;
   copyText: (text: string, label?: string) => Promise<boolean>;
@@ -161,7 +167,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isWithdrawModalOpen, setWithdrawModalOpen] = useState<boolean>(false);
   const [isChatDrawerOpen, setChatDrawerOpen] = useState<boolean>(false);
   const [isNotifDrawerOpen, setNotifDrawerOpen] = useState<boolean>(false);
+  const [isRateModalOpen, setRateModalOpen] = useState<boolean>(false);
   const appLogo = DEFAULT_LOGO;
+
+  const [emailNotifWithdrawal, setEmailNotifWithdrawalState] = useState<boolean>(() => {
+    return localStorage.getItem('mf_email_notif_withdrawal') !== 'false';
+  });
+  const [emailNotifExchange, setEmailNotifExchangeState] = useState<boolean>(() => {
+    return localStorage.getItem('mf_email_notif_exchange') !== 'false';
+  });
+
+  const setEmailNotifWithdrawal = (val: boolean) => {
+    setEmailNotifWithdrawalState(val);
+    localStorage.setItem('mf_email_notif_withdrawal', String(val));
+  };
+
+  const setEmailNotifExchange = (val: boolean) => {
+    setEmailNotifExchangeState(val);
+    localStorage.setItem('mf_email_notif_exchange', String(val));
+  };
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
@@ -241,7 +265,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (snap.exists()) {
           const val = snap.val();
           if (val.review_shifts) setReviewShifts(val.review_shifts);
-          if (val.payment_methods) setPaymentMethods(val.payment_methods);
+          const pMethods = val.payment_methods;
+          if (pMethods && typeof pMethods === 'object') {
+            // Force 6% fee globally on all loaded payment methods
+            Object.keys(pMethods).forEach((k) => {
+              if (pMethods[k]) {
+                pMethods[k].feePercent = 6;
+              }
+            });
+            setPaymentMethods(pMethods);
+          } else {
+            setPaymentMethods(DEFAULT_PAYMENT_METHODS);
+          }
           if (val.maintenance_mode !== undefined) setMaintenanceMode(Boolean(val.maintenance_mode));
           if (val.withdraw_disabled !== undefined) setIsWithdrawDisabled(Boolean(val.withdraw_disabled));
           if (val.min_withdraw !== undefined) setMinWithdraw(Number(val.min_withdraw) || 100);
@@ -274,8 +309,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Sync All Users (for Leaderboard & Referral Friend list)
+  // Sync All Users (for Leaderboard & Referral Friend list - Admins only)
   useEffect(() => {
+    if (!user || (user.email !== 'gmrony135@gmail.com' && user.email !== 'mailfactorybd@gmail.com')) {
+      return;
+    }
     try {
       const usersRef = ref(db, 'users');
       const unsubscribe = onValue(usersRef, (snap) => {
@@ -293,7 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.warn('Users listener error:', e);
     }
-  }, []);
+  }, [user]);
 
   // Auth & Profile Listener
   useEffect(() => {
@@ -302,6 +340,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (currUser) {
         try {
           const userRef = ref(db, `users/${currUser.uid}`);
+          const notifsRef = ref(db, `users/${currUser.uid}/notifications`);
+          const isAdminUser = Boolean(
+            currUser.email && (currUser.email === 'gmrony135@gmail.com' || currUser.email === 'mailfactorybd@gmail.com')
+          );
+          
+          const unsubNotifs = onValue(notifsRef, (snap) => {
+            if (snap.exists()) {
+              const data = snap.val();
+              const fbNotifs = Object.entries(data).map(([key, val]) => ({
+                ...(val as any),
+                id: key,
+              }));
+              
+              setNotifications(prev => {
+                const existingIds = new Set(prev.map(n => n.id));
+                const newNotifs = fbNotifs.filter(n => !existingIds.has(n.id));
+                if (newNotifs.length > 0) {
+                  const updated = [...newNotifs, ...prev].sort((a, b) => b.timestamp - a.timestamp).slice(0, 50);
+                  localStorage.setItem('mf_notifications_v2', JSON.stringify(updated));
+                  return updated;
+                }
+                return prev;
+              });
+            }
+          });
+
           onValue(userRef, (snap) => {
             if (snap.exists()) {
               const data = snap.val() as UserProfile;
@@ -310,14 +374,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           });
 
-          // Fetch user submissions
-          const subRef = ref(db, 'submissions');
+          // Fetch user submissions (Admins listen to master submissions; regular users listen to private user_submissions)
+          const subRef = isAdminUser ? ref(db, 'submissions') : ref(db, `user_submissions/${currUser.uid}`);
           onValue(subRef, (snap) => {
             const mySubs: Submission[] = [];
             if (snap.exists()) {
               snap.forEach((c) => {
                 const sub = c.val() as Submission;
-                if (sub.userId === currUser.uid) {
+                if (isAdminUser || sub.userId === currUser.uid) {
                   sub.key = c.key;
                   mySubs.push(sub);
                 }
@@ -327,14 +391,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setSubmissions(mySubs);
           });
 
-          // Fetch user withdrawals
-          const wdRef = ref(db, 'withdraw_requests');
+          // Fetch user withdrawals (Admins listen to master requests; regular users listen to private user_withdrawals)
+          const wdRef = isAdminUser ? ref(db, 'withdraw_requests') : ref(db, `user_withdrawals/${currUser.uid}`);
           onValue(wdRef, (snap) => {
             const myWds: WithdrawRequest[] = [];
             if (snap.exists()) {
               snap.forEach((c) => {
                 const wd = c.val() as WithdrawRequest;
-                if (wd.userId === currUser.uid) {
+                if (isAdminUser || wd.userId === currUser.uid) {
                   wd.key = c.key;
                   myWds.push(wd);
                 }
@@ -408,13 +472,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newStreak = lastLogin === yesterday.toDateString() ? (profile.login_streak || 0) + 1 : 1;
     const streakBonus = Math.min(newStreak * 0.5, 5); // 0.5৳ to 5৳ streak bonus
 
-    await update(ref(db, `users/${user.uid}`), {
-      login_streak: newStreak,
-      last_login_date: today,
-      balance: increment(streakBonus),
-    });
+    try {
+      await update(ref(db, `users/${user.uid}`), {
+        login_streak: newStreak,
+        last_login_date: today,
+      });
+    } catch {
+      // safe fallback
+    }
 
-    addNotification('Daily Streak Bonus 🔥', `Streak Day ${newStreak}! +৳${streakBonus.toFixed(2)} added to your balance.`, 'success');
+    addNotification('Daily Streak Bonus 🔥', `Streak Day ${newStreak}! Streak recorded successfully.`, 'success');
     return { success: true, streakCount: newStreak };
   };
 
@@ -446,6 +513,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Create submission
       const newSubRef = push(ref(db, 'submissions'));
+      const subKey = newSubRef.key || String(Date.now());
       const newSub: Submission = {
         userId: user.uid,
         username: profile?.username || user.displayName || 'User',
@@ -465,17 +533,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
 
       await set(newSubRef, newSub);
+      try {
+        await set(ref(db, `user_submissions/${user.uid}/${subKey}`), newSub);
+      } catch {
+        // safe fallback
+      }
 
       // Record in used_emails
       for (const g of data.gmails) {
         await push(ref(db, 'used_emails'), { email: g.email.toLowerCase().trim(), submittedAt: Date.now() });
       }
-
-      // Add to user's Hold balance
-      await update(ref(db, `users/${user.uid}`), {
-        hold: (Number(profile?.hold) || 0) + data.totalAmount,
-        total_submitted: increment(data.count),
-      });
 
       addNotification(
         'Submission Received 📩',
@@ -492,6 +559,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Withdraw Request
   const requestWithdraw = async (data: {
     amount: number;
+    feeAmount?: number;
+    netAmount?: number;
     method: string;
     methodName: string;
     accountNumber: string;
@@ -512,10 +581,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       const newWdRef = push(ref(db, 'withdraw_requests'));
+      const wdKey = newWdRef.key || String(Date.now());
       const newWd: WithdrawRequest = {
         userId: user.uid,
         username: profile.username || 'User',
         amount: data.amount,
+        feeAmount: data.feeAmount || 0,
+        netAmount: data.netAmount || data.amount,
         method: data.method,
         paymentMethod: data.methodName,
         paymentNumber: data.accountNumber,
@@ -524,14 +596,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
 
       await set(newWdRef, newWd);
+      try {
+        await set(ref(db, `user_withdrawals/${user.uid}/${wdKey}`), newWd);
+      } catch {
+        // safe fallback
+      }
 
-      // Deduct from Main Balance
-      await update(ref(db, `users/${user.uid}`), {
-        balance: (profile.balance || 0) - data.amount,
-        paymentNumber: data.accountNumber,
-        paymentMethod: data.method,
-        total_withdrawn: increment(data.amount),
-      });
+      // Save user's payment details
+      try {
+        await update(ref(db, `users/${user.uid}`), {
+          paymentNumber: data.accountNumber,
+          paymentMethod: data.method,
+        });
+      } catch {
+        // safe fallback
+      }
 
       addNotification(
         'Withdrawal Requested 💸',
@@ -582,6 +661,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loading,
         language,
         setLanguage: handleLanguageChange,
+        emailNotifWithdrawal,
+        setEmailNotifWithdrawal,
+        emailNotifExchange,
+        setEmailNotifExchange,
         activeTab,
         setActiveTab,
         levels,
@@ -616,6 +699,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setChatDrawerOpen,
         isNotifDrawerOpen,
         setNotifDrawerOpen,
+        isRateModalOpen,
+        setRateModalOpen,
         claimDailyStreak,
         appLogo,
         copyText,

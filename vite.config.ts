@@ -12,7 +12,8 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         devOptions: {
-          enabled: false,
+          enabled: true,
+          type: 'module',
         },
         includeAssets: ['favicon.svg', 'icons/*.png', 'icons/*.svg'],
         manifest: {
@@ -27,25 +28,19 @@ export default defineConfig(() => {
           scope: '/',
           icons: [
             {
-              src: '/icons/icon-192.png',
+              src: '/app-logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: '/icons/icon-maskable-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'maskable'
-            },
-            {
-              src: '/icons/icon-512.png',
+              src: '/app-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any'
             },
             {
-              src: '/icons/icon-maskable-512.png',
+              src: '/app-logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable'

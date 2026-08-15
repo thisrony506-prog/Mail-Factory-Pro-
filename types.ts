@@ -31,6 +31,8 @@ export interface WithdrawRequest {
   userId: string;
   username: string;
   amount: number;
+  feeAmount?: number;
+  netAmount?: number;
   method: string;
   paymentMethod: string;
   paymentNumber: string;
@@ -120,6 +122,21 @@ export interface FAQItem {
   category?: string;
 }
 
-export type ActiveTab = 'home' | 'exchange' | 'history' | 'sellers' | 'profile';
 
+
+export type ActiveTab = 'home' | 'exchange' | 'history' | 'sellers' | 'profile' | 'withdraw' | 'privacy' | 'about' | 'reviews' | 'admin_reviews';
 export type Language = 'bn' | 'en';
+
+export interface Review {
+  id: string; // Document ID (usually same as userId)
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  rating: number; // 1-5
+  text: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: number;
+  updatedAt: number;
+  isVerified?: boolean;
+}
+
